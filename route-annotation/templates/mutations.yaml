@@ -1,0 +1,16 @@
+apiVersion: mutations.gatekeeper.sh/v1alpha1
+kind: AssignMetadata
+metadata:
+  name: chart-mutation
+spec:
+  match:
+    scope: Namespaced
+    namespaces: {{ .Values.namespaces }}
+    kinds:
+    - apiGroups: ["*"]
+      kinds: ["Route", "Pod"]
+  location: 'metadata.annotations."haproxy.router.openshift.io/ip_whitelist"'
+  parameters:
+    assign:
+      value:  {{ include "route.ipValue" . | join "," }}
+

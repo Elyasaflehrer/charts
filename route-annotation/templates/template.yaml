@@ -1,0 +1,26 @@
+apiVersion: templates.gatekeeper.sh/v1alpha1
+kind: ConstraintTemplate
+metadata:
+  name: {{ include "route.fullname" . | replace "-" "" }}
+spec:
+  crd:
+    spec:
+      names:
+        kind: {{ include "route.fullname" . | camelcase }}
+      validation: 
+        openAPIV3Schema:
+          properties:
+            ips:
+              type: string
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package {{ include "route.fullname" . | replace "-" "" }}
+
+        violation[{"msg": msg, "details": {}}] {
+        inputIP := input.review.object.metadata.annotations["haproxy.router.openshift.io/ip_whitelist"]
+        requiredIP := input.parameters.ips
+      
+        inputIP != requiredIP
+        msg := sprintf("bad value provider '%s' required '%s'", [inputIP, requiredIP])
+        }
