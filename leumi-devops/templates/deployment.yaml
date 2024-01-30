@@ -14,7 +14,7 @@ spec:
         app: busybox
     spec:
       containers:
-        - name: busybox
+        - name: {{(.Values.image).name |default "busybox"}}
           securityContext:
           image: {{(.Values.image).name |default "busybox"}}:{{(.Values.image).tag |default "latest"}}
           ports:
