@@ -4,17 +4,20 @@ pipeline {
     stages {
         stage('check configurations') {
             steps {
-                echo 'Hello World'
-                //writeFile file: 'kubeconfig', text: '123'
-
                 createConfigFiles()
                 sh 'ls -la'
                 sh 'helm version'
                 sh 'git version'
                 sh ' kubectl --kubeconfig=$WORKSPACE/kubeconfig get node'
-                echo "$PWD"
                 echo "$WORKSPACE"
             }
+        }
+        stage('get-values') {
+            steps {
+               script{
+                   properties([parameters([string(description: 'values for helm chart added the values in following format values1.x=values1,values2.y=values2', name: 'values', trim: true)])])
+               }
+             }
         }
         stage('clone') {
             steps {
@@ -22,14 +25,21 @@ pipeline {
             }
         }
         stage('helm install') {
-                    steps {
-                            dir('charts/leumi-devops'){
-                                sh 'ls -la $WORKSPACE'
-                                sh 'helm install candidate-jenkins . --kubeconfig=$WORKSPACE/kubeconfig  --create-namespace=true -n=leumi-devops '
-                            }
+            steps {
+                 string command = generatedcommand()
+                    dir('charts/leumi-devops'){
+                        sh 'ls -la $WORKSPACE'
+                        sh "$command"
                     }
-                }
+            }
+        }
     }
+}
+def generatedcommand(){
+    def command = "helm upgrade -i candidate-jenkins . --kubeconfig=$WORKSPACE/kubeconfig --create-namespace=true -n=leumi-devops"
+    if (!params.values.isEmpty())
+               command = command+ ' ' + " --set ${params.values}"
+    return command
 }
 def createConfigFiles(){
     sh '''

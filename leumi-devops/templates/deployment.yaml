@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: busybox
+  name: {{(.Values.image).name |default "busybox"}}
 spec:
   replicas: 1
   selector:
@@ -16,7 +16,7 @@ spec:
       containers:
         - name: busybox
           securityContext:
-          image: busybox:latest
+          image: {{(.Values.image).name |default "busybox"}}:{{(.Values.image).tag |default "latest"}}
           ports:
             - name: http
               containerPort: 8080
